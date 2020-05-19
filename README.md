@@ -33,3 +33,12 @@ v 0.3 - has a GUI now
 	  
 v 0.3.1
 	  - corrected the remaining letters issue from v .3; it was a logic error that needed a duplicate print and a refresh window call
+
+v 0.4
+	 - added balance to the lives; more words = fewer lives (trust me, it makes sense - more words increases the likelihood of a letter being correct, and they more letters you get correct, the more likely you are to solve words)
+       - corrected a formatting issue where the solutions on death were shown as a list of characters instead of a single string for each word
+
+v 0.4.1
+        - doesn't display errors for using shift, as well as potential accident input (such as mouse wheel or capslock)
+        - punishes player for trying to be funny (takes away a life if you input an illegal button on purpose such as + or ] and so on)
+        - formatting changes to pop ups and solution screen

@@ -81,6 +81,21 @@ def blankOutSolveList(solveList):
 def split(word):
     return [char for char in word]
 
+# turn char list into string (for displaying word when you die)
+def joiner(s): 
+    new = "\n"
+    
+    
+    for x in s:
+       a = ""
+       for i in x:
+          a += i
+       a = a.center(20) 
+       new += a
+       new += "\n"
+    
+    return new 
+      
 
 #introductory stuff    
 def intro(wordList,hangWords):
@@ -92,10 +107,10 @@ def intro(wordList,hangWords):
    letters = list(string.ascii_letters)
 
    #creates a PySimpleGui window requesting number of words the player wants to guess (tentatively at a max of 10 words
-   questionString = (f"How many words would you like to attempt simultaneously?  You may do up to {maxWords}. ")
+   questionString = (f"How many words would you like to attempt simultaneously?  \nYou may do up to {maxWords} words at a time. Lives will be based on \nthe number of words chosen - more words = fewer lives")
    sg.theme('DarkAmber')   # Add a little color to the window
    numOfWordsLayout = [[sg.Text(questionString)]]
-   numOfWordsLayout.append( [sg.T("Number of words: "), sg.InputText()])
+   numOfWordsLayout.append( [sg.T("Number of words: ",justification = "center", size = (20,1)), sg.InputText(size = (10,1)), ])
    numOfWordsLayout.append( [sg.Button('Submit')] )
    numOfWordsWindow = sg.Window('Number of words',numOfWordsLayout )
     
@@ -138,7 +153,16 @@ def intro(wordList,hangWords):
    # set the slots in solveList to ? to show they're not solved
    blankOutSolveList(solveList)
    return solveList
-    
+
+def livesBalance(numOfWords):
+   if numOfWords > 7:
+      return 2
+   elif numOfWords >4:
+      return 5
+   elif numOfWords >1:
+      return 7
+   else:
+      return 9
     
 def gameLoop():
     #will contain the entire valid wordlist
@@ -146,7 +170,7 @@ def gameLoop():
     #the answers
     hangWords = []
     #guesses before you die
-    hp = 8
+    hp = 0
     #points are not implemented yet; more of a placeholder for future things
     points = 100
     #how many words the player wants to guess at a time
@@ -171,6 +195,7 @@ def gameLoop():
     foundALetterThisTime=False
     #valid letters the players can guess at (they might be incorrect, but they're still valid)
     remainingLetters = []
+    
 
     #copy all the letters (uppercase and lowercase) into the remaining letters
     for i in range(len(letters)):
@@ -178,11 +203,14 @@ def gameLoop():
 
     #play the intro sequence, including initializing words.  Returns the solveList blanked out list
     solveList = intro(wordList,hangWords)
-
-
+    
+    ignore = ( "Shift_L:16","Caps_Lock:20","Alt_L:18","Control_L:17","Alt_R:18","Control_R:17","MouseWheel:Down","MouseWheel:Up","App:93","BackSpace:8")
+    punish = ( "/",".",",",";","'","[","]","\\","|","+","_","-","{","}","!","@","#","$","%","^","&","*","/t","=")
+   
     #set all the puzzles to assume no letters have been found (needed to make sure the length is hidden)
     #also set the length of the word found so far to 0 (since we didn't find a word yet)
     numOfWords = len(hangWords)
+    hp = livesBalance(numOfWords)
     for i in range (numOfWords):
         foundAtLeastOneLetter.append(False)
         distanceMoved.append(0)
@@ -193,24 +221,11 @@ def gameLoop():
     
     while True:
         #assume player is a winner until an unsolved puzzle is found; easier to do it this way than to assume they're losing and checking to see that each puzzle was won.
-        winner = True
+        
         foundALetterThisTime = False
 
-        #winner check
-        while True:
-            #if any unsolved letters exist, program assumes you haven't won yet
-            for i in range (numOfWords):
-                if "?" in solveList[i]:
-                    winner = False
-                    break
-            
-            #debug make a fancier win thing here
-            if winner == True:
-                sg.popup("WINNER")
-                quit()
-            break
-       
         
+       
         #display each puzzle as it currently appears
         for i in range (numOfWords):
 
@@ -235,7 +250,45 @@ def gameLoop():
                 printString[i]=myString
 
 
-        
+        #winner check
+        while True:
+            #if any unsolved letters exist, program assumes you haven't won yet
+            for i in range (numOfWords):
+                if "?" in solveList[i]:
+                    winner = False
+                    break
+            
+            #debug make a fancier win thing here
+            if winner == True:
+               for i in range (numOfWords):
+
+                  if foundAtLeastOneLetter[i] == False:
+                      myString = (f"Word {i+1}:  ")
+                      printString[i]= myString
+                      continue
+                  elif "?" not in solveList[i]:
+                      myString = (f"Word {i+1}: ")
+                      for j in solveList[i]:
+                         myString += (f" {j} ")
+                      myString+=(f" <SOLVED!>")
+                      printString[i] = myString
+                      continue
+                  elif foundAtLeastOneLetter[i] == True:
+                      myString =(f"Word {i+1}: ")
+                      for j in range (maxWordFound[i]+1):
+                          if solveList[i][j] == "?":
+                              myString+=(" _ ")
+                          else:
+                              myString+=(f" {solveList[i][j]} ")
+                      printString[i]=myString
+               print(myString)
+
+               
+               window.refresh()
+               sg.popup("WINNER")
+               window.close()
+               quit()
+            break        
         
         lettersString = ""
         # print remaining letters
@@ -293,7 +346,7 @@ def gameLoop():
         window['lettersKey'](lettersString)
         
         window['dividerString']("*"*78)
-        hpbar = "Lifepoints left: " + ("[*]"*(hp))
+        hpbar = "Lifepoints left: " + ("[*]"*(hp+1))
         window['livesRemaining'](hpbar)
         
         
@@ -310,9 +363,11 @@ def gameLoop():
 
         #make a more dramatic death thing   
         if hp == 0:
-            sg.popup("You dead")
-            sg.popup(f"Solution: {hangWords}")
-            sleep(10)
+            sg.popup("You have died.  RIP.")
+            s = joiner(hangWords)
+            solution = "SOLUTION:".center(20)
+            sg.popup(f"{solution}{s}",text_color = "deep sky blue",font = "courier 25")
+            window.close()
             quit()
 
         #debug for seeing the answers
@@ -361,8 +416,11 @@ def gameLoop():
            window['messageToUser']("You fool!  You already got this correct!")
            continue
 
-        if letterGuess not in letters:
+        if letterGuess not in letters and letterGuess not in ignore:
             window['messageToUser'](f"(You fool, that's not a valid letter. Try again)")
+        if letterGuess not in letters and letterGuess in punish:
+            sg.popup("You think this is some kind of game?!  That's obviously not a letter.  You're losing a life for that.",text_color = "red",font = "courier 25")
+            hp -= 1
         if letterGuess in failList:
             window['messageToUser']("You fool!  You already guessed that.")
             continue
@@ -389,10 +447,10 @@ def gameLoop():
         # updates the window with messages    
         if foundALetterThisTime == False and letterGuess in letters:   
             hp -=1
-            window['messageToUser']("Ouch, you guessed wrong!  That'll cost a life.")
+            window['messageToUser']("Ouch, you guessed wrong!  That'll cost a life.",text_color = "red")
             failList.append(letterGuess)
             failList.sort()
-        else:
+        elif foundALetterThisTime == True:
             window['messageToUser']("You found a letter!",text_color = "green")
             
         #print code
