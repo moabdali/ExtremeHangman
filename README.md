@@ -29,3 +29,7 @@ v 0.3 - has a GUI now
       - need to figure out why the game doesn't update the "remaining letters" immediately; otherwise working without issue
 	  - renamed to .pyw type in order to avoid dealing with a console window (as it's no longer needed)
 	  - added the PySimpleGUI.py file to the folder to avoid issues with having to download it
+	  
+	  
+v 0.3.1
+	  - corrected the remaining letters issue from v .3; it was a logic error that needed a duplicate print and a refresh window call

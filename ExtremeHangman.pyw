@@ -68,7 +68,7 @@ def generateWordList(wordList,letters):
                 break
         if skipFlag == 0:
             wordList.append(i)
-    sleep(1)    
+    
 
 
 # the solveArray is currently a duplicate of the answers, so we want to make the arrays reset to all "???" while maintaining the same length per word
@@ -233,6 +233,9 @@ def gameLoop():
                     else:
                         myString+=(f" {solveList[i][j]} ")
                 printString[i]=myString
+
+
+        
         
         lettersString = ""
         # print remaining letters
@@ -247,26 +250,29 @@ def gameLoop():
                     lettersString+=("[#]")
                 elif letters[i] in failList:
                     lettersString+=("[#]")
-
+        
 
         if firstTimeWindow == True:
           layout = []
-          layout.append( [ sg.Text("EXTREME HANGMAN", size = (30,None), font="Courier 40", text_color = 'red', justification = "center")])
+          layout.append( [ sg.Text("EXTREME HANGMAN", size = (50,None), font="Courier 40", text_color = 'red', justification = "center")])
           for i in range(0,numOfWords):
-             layout += [sg.Text("",font = "courier 25", size=(100,None),key = i)],
+             layout += [sg.Text("",font = "courier 25", size=(80,None),key = i)],
           
-          layout.append( [ sg.Text(" Missed Letters ",font = "courier 25", size=(100,None), key = 'reserved1')])
-          layout.append( [ sg.Text(" Remaining Letters:",font = "courier 25", size=(100,None),key = 'reserved2')])
-          layout.append( [ sg.Text(" letters",font = "courier 25", size=(100,None), key = 'reserved3')])
-          #layout.append( [ sg.Button( lettersString[i],i in range(0,52), key = i, size = (100,None))])
-          layout.append( [ sg.Text(" ",font = "courier 25", size=(100,None), key = 'reserved5')])
-          layout.append( [ sg.Text(" Lives Remaining ",font = "courier 25", size=(100,None), key = 'livesRemaining')])
-          layout.append( [ sg.Text(" ",font = "courier 25", size=(100,None), key = 'messageToUser')])
-          layout.append( [ sg.Text("",key = 'guessme',font = "courier 25", size=(100,None), justification = "center")] )
+          layout.append( [ sg.Text(" Missed Letters ",font = "courier 25", size=(80,None), key = 'incorrectLettersKey')])
+          layout.append( [ sg.Text(" Remaining Letters:",font = "courier 25", size=(80,None),key = 'remainingLettersStringKey')])
+          layout.append( [ sg.Text(" letters",font = "courier 25", size=(80,None), key = 'lettersKey')])
+          #layout.append( [ sg.Button( lettersString[i],i in range(0,52), key = i, size = (80,None))])
+          layout.append( [ sg.Text(" ",font = "courier 25", size=(80,None), key = 'dividerString')])
+          layout.append( [ sg.Text(" Lives Remaining ",font = "courier 25", size=(80,None), key = 'livesRemaining')])
+          layout.append( [ sg.Text(" ",font = "courier 25", size=(80,None), key = 'messageToUser')])
+          layout.append( [ sg.Text("",key = 'guessme',font = "courier 25", size=(80,None), justification = "center")] )
           window = sg.Window('Extreme Hangman',layout, finalize = True,  return_keyboard_events=True,)
           window.TKroot.focus_force()
           firstTimeWindow = False
-          
+
+
+
+        #printCode
         #update the current status of the words solved
         for i in range (numOfWords):
            window[i](printString[i])
@@ -280,20 +286,21 @@ def gameLoop():
         
         #incorrect letters (letters that you guessed that aren't in the puzzle)
         failList.sort()
-        window['reserved1'](f"Incorrect letters: {failList}")
-        window['reserved2']("Remaining letters: ")
+        window['incorrectLettersKey'](f"Incorrect letters: {failList}")
+        window['remainingLettersStringKey']("Remaining letters: ")
 
 
-       
-        window['reserved3'](lettersString)
+        window['lettersKey'](lettersString)
         
-        window['reserved5']("*"*78)
+        window['dividerString']("*"*78)
         hpbar = "Lifepoints left: " + ("[*]"*(hp))
         window['livesRemaining'](hpbar)
         
-
+        
         event, values = window.read()
 
+
+        
 
 
 
@@ -356,7 +363,6 @@ def gameLoop():
 
         if letterGuess not in letters:
             window['messageToUser'](f"(You fool, that's not a valid letter. Try again)")
-            sleep(3)
         if letterGuess in failList:
             window['messageToUser']("You fool!  You already guessed that.")
             continue
@@ -389,6 +395,21 @@ def gameLoop():
         else:
             window['messageToUser']("You found a letter!",text_color = "green")
             
+        #print code
+        for i in range (numOfWords):
+           window[i](printString[i])
+
+        #sets letters that you have used to "#" symbols so that you don't reuse them
+        for i in range(len(remainingLetters)):
+           for j in range(len(solveList)):
+              if remainingLetters[i] in solveList[j]:
+                 remainingLetters[i] = "#"
+
+        #incorrect letters (letters that you guessed that aren't in the puzzle)
+        failList.sort()
+        window['incorrectLettersKey'](f"Incorrect letters: {failList}")
+        window['remainingLettersStringKey']("Remaining letters: ")
+        window.read(timeout = 10)
         
         
 gameLoop()
